@@ -30,9 +30,7 @@ export const SplashScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.flame}>🔥</Text>
         </View>
         <View style={styles.wordmark}>
-          <Text variant="display" color={colors.white} align="center">Ember</Text>
-          <Text variant="display" color="rgba(255,255,255,0.5)" align="center"> & </Text>
-          <Text variant="display" color={colors.accent} align="center">Oak</Text>
+          <Text variant="display" color={colors.white} align="center">Jangirov's</Text>
         </View>
         <Text variant="bodySm" color="rgba(255,255,255,0.5)" align="center" style={styles.tagline}>
           Exceptional dining, delivered
