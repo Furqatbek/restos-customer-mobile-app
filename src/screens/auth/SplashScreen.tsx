@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, Animated } from 'react-native';
+import { View, StyleSheet, Animated, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/types';
@@ -25,16 +25,11 @@ export const SplashScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <LinearGradient colors={['#2D0A0A', '#8B1A1A', '#C9963C']} style={styles.container}>
       <Animated.View style={[styles.center, { transform: [{ scale }], opacity }]}>
-        {/* Logo mark */}
-        <View style={styles.logoMark}>
-          <Text style={styles.flame}>🔥</Text>
-        </View>
-        <View style={styles.wordmark}>
-          <Text variant="display" color={colors.white} align="center">Jangirov's</Text>
-        </View>
-        <Text variant="bodySm" color="rgba(255,255,255,0.5)" align="center" style={styles.tagline}>
-          Exceptional dining, delivered
-        </Text>
+        <Image
+          source={require('../../../assets/icon.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
       </Animated.View>
 
       <View style={styles.poweredBy}>
@@ -46,18 +41,7 @@ export const SplashScreen: React.FC<Props> = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  center: { alignItems: 'center', gap: 16 },
-  logoMark: {
-    width: 80,
-    height: 80,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  flame: { fontSize: 40 },
-  wordmark: { flexDirection: 'row', alignItems: 'baseline' },
-  tagline: { marginTop: 4 },
+  center: { alignItems: 'center' },
+  logo: { width: 280, height: 280 },
   poweredBy: { position: 'absolute', bottom: 48 },
 });
