@@ -34,8 +34,11 @@ export const Button: React.FC<Props> = ({
 }) => {
   const handlePress = () => {
     if (disabled || loading) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onPress?.();
+    // Haptics is best-effort; never let it block or crash the action
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)?.catch(() => {});
+    } catch {}
   };
 
   return (
