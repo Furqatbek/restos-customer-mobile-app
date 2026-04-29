@@ -1,5 +1,5 @@
 import api from './client';
-import * as SecureStore from 'expo-secure-store';
+import { storage } from '../utils/storage';
 
 export interface OtpRequestPayload {
   phone: string;
@@ -34,13 +34,13 @@ export const verifyOtp = (payload: OtpVerifyPayload) =>
   api.post<AuthTokens & { customer: CustomerInfo }>('/consumer/auth/verify', payload);
 
 export const saveTokens = async (tokens: AuthTokens) => {
-  await SecureStore.setItemAsync('access_token', tokens.accessToken);
-  await SecureStore.setItemAsync('refresh_token', tokens.refreshToken);
+  await storage.setItem('access_token', tokens.accessToken);
+  await storage.setItem('refresh_token', tokens.refreshToken);
 };
 
 export const clearTokens = async () => {
-  await SecureStore.deleteItemAsync('access_token');
-  await SecureStore.deleteItemAsync('refresh_token');
+  await storage.deleteItem('access_token');
+  await storage.deleteItem('refresh_token');
 };
 
-export const getAccessToken = () => SecureStore.getItemAsync('access_token');
+export const getAccessToken = () => storage.getItem('access_token');
