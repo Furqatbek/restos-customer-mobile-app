@@ -15,18 +15,10 @@ type Props = { navigation: StackNavigationProp<AuthStackParamList, 'Onboarding'>
 const { width } = Dimensions.get('window');
 
 const LANGUAGES = [
-  { code: 'en', flag: '🇺🇸', native: 'English',    region: 'United States' },
-  { code: 'es', flag: '🇪🇸', native: 'Español',    region: 'España' },
-  { code: 'fr', flag: '🇫🇷', native: 'Français',   region: 'France' },
-  { code: 'de', flag: '🇩🇪', native: 'Deutsch',    region: 'Deutschland' },
-  { code: 'it', flag: '🇮🇹', native: 'Italiano',   region: 'Italia' },
-  { code: 'pt', flag: '🇧🇷', native: 'Português',  region: 'Brasil' },
-  { code: 'ja', flag: '🇯🇵', native: '日本語',       region: 'Japan' },
-  { code: 'ko', flag: '🇰🇷', native: '한국어',       region: 'Korea' },
-  { code: 'zh', flag: '🇨🇳', native: '中文',        region: 'China' },
-  { code: 'ar', flag: '🇸🇦', native: 'العربية',    region: 'Saudi Arabia' },
-  { code: 'uz', flag: '🇺🇿', native: "O'zbekcha",  region: 'Uzbekistan' },
-  { code: 'tr', flag: '🇹🇷', native: 'Türkçe',     region: 'Türkiye' },
+  { id: 'uz-latn', flag: '🇺🇿', native: "O'zbek tili",   script: 'Lotin' },
+  { id: 'uz-cyrl', flag: '🇺🇿', native: 'Ўзбек тили',    script: 'Кирилл' },
+  { id: 'ru',      flag: '🇷🇺', native: 'Русский язык',   script: '' },
+  { id: 'kaa',     flag: '🇺🇿', native: 'Қарақалпақша',  script: '' },
 ];
 
 const SLIDES = [
@@ -62,10 +54,10 @@ const SLIDES = [
 
 export const OnboardingScreen: React.FC<Props> = ({ navigation }) => {
   const [step, setStep] = useState(0);
-  const [selectedLang, setSelectedLang] = useState('en');
+  const [selectedLang, setSelectedLang] = useState('uz-latn');
   const scrollRef = useRef<ScrollView>(null);
 
-  const selectedLanguage = LANGUAGES.find((l) => l.code === selectedLang)!;
+  const selectedLanguage = LANGUAGES.find((l) => l.id === selectedLang)!;
 
   const goNext = () => {
     if (step < SLIDES.length - 1) {
@@ -104,27 +96,30 @@ export const OnboardingScreen: React.FC<Props> = ({ navigation }) => {
                     Select the language you'd like to use
                   </Text>
                 </View>
-                <ScrollView contentContainerStyle={styles.langGrid} showsVerticalScrollIndicator={false}>
-                  {LANGUAGES.map((lang) => (
-                    <TouchableOpacity
-                      key={lang.code}
-                      style={[styles.langCard, selectedLang === lang.code && styles.langCardSelected]}
-                      onPress={() => setSelectedLang(lang.code)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.flag}>{lang.flag}</Text>
-                      <View style={{ flex: 1 }}>
-                        <Text variant="bodyMed" color={selectedLang === lang.code ? colors.primary : colors.ink}>
+                <View style={styles.langGrid}>
+                  {LANGUAGES.map((lang) => {
+                    const selected = selectedLang === lang.id;
+                    return (
+                      <TouchableOpacity
+                        key={lang.id}
+                        style={[styles.langCard, selected && styles.langCardSelected]}
+                        onPress={() => setSelectedLang(lang.id)}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.flag}>{lang.flag}</Text>
+                        <Text variant="bodyMed" color={selected ? colors.primary : colors.ink} style={{ flex: 1 }}>
                           {lang.native}
                         </Text>
-                        <Text variant="caption" color={colors.inkSub}>{lang.region}</Text>
-                      </View>
-                      {selectedLang === lang.code && (
-                        <View style={styles.checkmark}><Text color={colors.white}>✓</Text></View>
-                      )}
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
+                        {lang.script ? (
+                          <Text variant="caption" color={colors.inkSub}>{lang.script}</Text>
+                        ) : null}
+                        {selected && (
+                          <View style={styles.checkmark}><Text color={colors.white}>✓</Text></View>
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
               </View>
             );
           }
@@ -174,7 +169,7 @@ const styles = StyleSheet.create({
 
   // Language slide
   langHeader: { paddingHorizontal: spacing.xl, paddingTop: spacing.xl, paddingBottom: spacing.lg, gap: 4 },
-  langGrid: { paddingHorizontal: spacing.lg, paddingBottom: 20, gap: 8 },
+  langGrid: { paddingHorizontal: spacing.lg, paddingBottom: 20, gap: 8, marginTop: spacing.sm },
   langCard: {
     flexDirection: 'row',
     alignItems: 'center',
