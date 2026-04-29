@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View, StyleSheet, TouchableOpacity, Animated,
 } from 'react-native';
@@ -49,19 +49,23 @@ export const OnboardingScreen: React.FC<Props> = ({ navigation }) => {
   const [step, setStep] = useState(0);
   const [selectedLang, setSelectedLang] = useState('uz-latn');
   const opacity = useRef(new Animated.Value(1)).current;
+  const isFirst = useRef(true);
 
   const selectedLanguage = LANGUAGES.find((l) => l.id === selectedLang)!;
+
+  // Fade in whenever step changes (skip the very first mount)
+  useEffect(() => {
+    if (isFirst.current) { isFirst.current = false; return; }
+    opacity.setValue(0);
+    Animated.timing(opacity, { toValue: 1, duration: 250, useNativeDriver: true }).start();
+  }, [step]);
 
   const goNext = () => {
     if (step >= TOTAL_STEPS - 1) {
       navigation.replace('Login');
       return;
     }
-    // Fade out → advance step → fade in
-    Animated.timing(opacity, { toValue: 0, duration: 150, useNativeDriver: true }).start(() => {
-      setStep((s) => s + 1);
-      Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }).start();
-    });
+    setStep((s) => s + 1);
   };
 
   const ctaLabel =
