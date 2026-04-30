@@ -75,10 +75,23 @@ api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   return config;
 });
 
-// ─── Response interceptor: reactive refresh on 401/403 ─────────────────────
+// ─── Response interceptor: envelope unwrap + reactive refresh on 401/403 ──
+
+const isEnvelope = (body: unknown): body is { success: boolean; data: unknown } =>
+  !!body
+  && typeof body === 'object'
+  && 'success' in (body as object)
+  && 'data' in (body as object);
 
 api.interceptors.response.use(
-  (response: AxiosResponse) => response,
+  (response: AxiosResponse) => {
+    // Unwrap the standard backend envelope { success, message, data, ... }
+    // so callers can treat response.data as the actual payload directly.
+    if (isEnvelope(response.data)) {
+      response.data = (response.data as { data: unknown }).data;
+    }
+    return response;
+  },
   async (error: AxiosError) => {
     const original = error.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
     const status = error.response?.status;

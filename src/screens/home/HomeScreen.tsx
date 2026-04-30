@@ -27,18 +27,30 @@ export const HomeScreen: React.FC = () => {
   const customer = useAuthStore((s) => s.customer);
   const itemCount = useCartStore((s) => s.itemCount());
 
-  const { data: restaurants, isLoading: restsLoading, refetch } = useQuery({
+  const {
+    data: restaurants,
+    isLoading: restsLoading,
+    error: restsError,
+    refetch,
+  } = useQuery({
     queryKey: ['restaurants'],
     queryFn: () => getActiveRestaurants().then((r) => r.data),
   });
 
   const firstRestaurant = restaurants?.[0];
 
-  const { data: menu, isLoading: menuLoading, refetch: refetchMenu } = useQuery({
+  const {
+    data: menu,
+    isLoading: menuLoading,
+    error: menuError,
+    refetch: refetchMenu,
+  } = useQuery({
     queryKey: ['menu', firstRestaurant?.id],
     queryFn: () => getPublicMenu(firstRestaurant!.id).then((r) => r.data),
     enabled: !!firstRestaurant,
   });
+
+  const queryError = (restsError ?? menuError) as Error | null;
 
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -92,8 +104,30 @@ export const HomeScreen: React.FC = () => {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
+        {queryError && (
+          <View style={styles.errorBox}>
+            <Text variant="bodyMed" color={colors.error}>Couldn't load the menu.</Text>
+            <Text variant="bodySm" color={colors.inkSub} style={{ marginTop: 4 }}>
+              {queryError.message ?? 'Unknown error'}
+            </Text>
+            <TouchableOpacity onPress={onRefresh} style={styles.retryBtn}>
+              <Text variant="bodyMed" color={colors.primary}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {!queryError && !firstRestaurant && (
+          <View style={styles.emptyBox}>
+            <Text variant="h3" align="center">No restaurants yet</Text>
+            <Text variant="body" color={colors.inkSub} align="center" style={{ marginTop: 8 }}>
+              Pull down to refresh.
+            </Text>
+          </View>
+        )}
+
         {/* Restaurant hero */}
         {firstRestaurant && <RestaurantHero restaurant={firstRestaurant} />}
 
@@ -247,6 +281,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 3,
+  },
+
+  scrollContent: { paddingBottom: spacing.xl },
+
+  errorBox: {
+    margin: spacing.xl,
+    padding: spacing.lg,
+    borderRadius: radius.lg,
+    backgroundColor: '#FFF5F5',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  retryBtn: { marginTop: spacing.md, alignSelf: 'flex-start' },
+
+  emptyBox: {
+    margin: spacing.xl,
+    padding: spacing.xxl,
+    borderRadius: radius.lg,
+    backgroundColor: colors.canvasAlt,
+    alignItems: 'center',
   },
 
   hero: {

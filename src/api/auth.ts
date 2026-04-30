@@ -34,14 +34,6 @@ export interface CustomerInfo {
   email?: string;
 }
 
-// Backend envelope: { success, message, data, timestamp }
-interface ApiEnvelope<T> {
-  success: boolean;
-  message?: string;
-  data: T;
-  timestamp?: string;
-}
-
 interface OtpRequestResponseData {
   session_id?: string;
   expires_at?: string;
@@ -58,25 +50,26 @@ interface OtpVerifyResponseData {
 }
 
 export const requestOtp = async (payload: OtpRequestPayload) => {
-  const { data } = await api.post<ApiEnvelope<OtpRequestResponseData>>(
+  // Global interceptor unwraps { success, data } → response.data is the
+  // inner payload directly.
+  const { data } = await api.post<OtpRequestResponseData>(
     '/consumer/auth/login',
     { ...payload, registrationSource: 'MOBILE_APP' as RegistrationSource },
   );
-  return data.data;
+  return data;
 };
 
 export const verifyOtp = async (payload: OtpVerifyPayload): Promise<VerifyResult> => {
-  const { data } = await api.post<ApiEnvelope<OtpVerifyResponseData>>(
+  const { data } = await api.post<OtpVerifyResponseData>(
     '/consumer/auth/verify',
     payload,
   );
-  const d = data.data;
   return {
-    accessToken: d.access_token,
-    refreshToken: d.refresh_token,
-    customerId: d.customer_id,
-    phoneNumber: d.phone_number,
-    isNewUser: d.is_new_user,
+    accessToken: data.access_token,
+    refreshToken: data.refresh_token,
+    customerId: data.customer_id,
+    phoneNumber: data.phone_number,
+    isNewUser: data.is_new_user,
   };
 };
 
