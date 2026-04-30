@@ -130,7 +130,11 @@ export const ProfileScreen: React.FC = () => {
           <Text variant="label" color={colors.inkSub} style={styles.groupLabel}>Preferences</Text>
           <MenuItem emoji="🌐" label="Language" sublabel="English" onPress={() => {}} />
           <Divider inset={spacing.xl} />
-          <MenuItem emoji="🔔" label="Notifications" onPress={() => {}} />
+          <MenuItem
+            emoji="🔔"
+            label="Notifications"
+            onPress={() => navigation.navigate('HomeTab', { screen: 'Notifications' })}
+          />
           <Divider inset={spacing.xl} />
           <MenuItem emoji="🛡️" label="Privacy & security" onPress={() => {}} />
         </View>

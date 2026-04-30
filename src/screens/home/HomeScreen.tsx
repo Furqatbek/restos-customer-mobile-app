@@ -15,6 +15,7 @@ import { Divider } from '../../components/common/Divider';
 import { useAuthStore } from '../../store/authStore';
 import { useCartStore } from '../../store/cartStore';
 import { getActiveRestaurants, getPublicMenu, Product, Category, Restaurant } from '../../api/menu';
+import { getUnreadCount } from '../../api/notifications';
 import { colors, spacing, radius, shadow } from '../../theme';
 
 type Nav = StackNavigationProp<HomeStackParamList, 'Home'>;
@@ -52,6 +53,18 @@ export const HomeScreen: React.FC = () => {
 
   const queryError = (restsError ?? menuError) as Error | null;
 
+  // Unread notifications badge — best-effort, no UI on failure.
+  const { data: unread } = useQuery({
+    queryKey: ['notifications-unread-count'],
+    queryFn: () => getUnreadCount().then((r) => {
+      const v = r.data as { count?: number } | number;
+      return typeof v === 'number' ? v : (v?.count ?? 0);
+    }),
+    refetchInterval: 60_000,
+    retry: false,
+  });
+  const unreadCount = typeof unread === 'number' ? unread : 0;
+
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -85,8 +98,18 @@ export const HomeScreen: React.FC = () => {
           <Text variant="h3">{customer?.firstName || 'Guest'} 👋</Text>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconBtn}>
+          <TouchableOpacity
+            style={styles.iconBtn}
+            onPress={() => navigation.navigate('Notifications')}
+          >
             <Text style={styles.iconEmoji}>🔔</Text>
+            {unreadCount > 0 && (
+              <View style={styles.cartBadge}>
+                <Text variant="caption" color={colors.white}>
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
           {itemCount > 0 && (
             <TouchableOpacity
@@ -264,7 +287,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   headerRight: { flexDirection: 'row', gap: spacing.sm },
-  iconBtn: { padding: spacing.sm },
+  iconBtn: { padding: spacing.sm, position: 'relative' },
   iconEmoji: { fontSize: 22 },
   cartBtn: {
     padding: spacing.sm,

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { CustomerInfo, AuthTokens, saveTokens, clearTokens, getAccessToken, logoutRemote } from '../api/auth';
 import { storage } from '../utils/storage';
+import { registerPushNotifications, unregisterPushNotifications } from '../utils/push';
 
 const HAS_ONBOARDED_KEY = 'has_onboarded';
 
@@ -38,12 +39,16 @@ export const useAuthStore = create<AuthState>((set) => ({
     await saveTokens(tokens);
     await storage.setItem(HAS_ONBOARDED_KEY, '1');
     set({ customer, isAuthenticated: true, hasOnboarded: true });
+    // Best-effort push registration. Never blocks login completion.
+    void registerPushNotifications();
   },
 
   logout: async () => {
     // Capture the token BEFORE clearing local state so we can still tell
     // the server to invalidate the session.
     const token = await getAccessToken();
+    // Best-effort unregister of push subscription (uses the still-valid token).
+    void unregisterPushNotifications();
     // Clear local state immediately — UI responds instantly, the root
     // navigator subscribes to isAuthenticated and swaps to the auth stack.
     await clearTokens();

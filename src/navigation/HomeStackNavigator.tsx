@@ -8,6 +8,7 @@ import { CheckoutScreen } from '../screens/checkout/CheckoutScreen';
 import { OrderTrackingScreen } from '../screens/tracking/OrderTrackingScreen';
 import { AddressBookScreen } from '../screens/profile/AddressBookScreen';
 import { AddAddressScreen } from '../screens/profile/AddAddressScreen';
+import { NotificationsScreen } from '../screens/notifications/NotificationsScreen';
 
 const Stack = createStackNavigator<HomeStackParamList>();
 
@@ -20,5 +21,6 @@ export const HomeStackNavigator: React.FC = () => (
     <Stack.Screen name="OrderTracking" component={OrderTrackingScreen} />
     <Stack.Screen name="AddressBook" component={AddressBookScreen} />
     <Stack.Screen name="AddAddress" component={AddAddressScreen} />
+    <Stack.Screen name="Notifications" component={NotificationsScreen} />
   </Stack.Navigator>
 );

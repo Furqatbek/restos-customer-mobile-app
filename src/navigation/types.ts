@@ -22,6 +22,7 @@ export type HomeStackParamList = {
   OrderTracking: { orderNumber: string };
   AddressBook: undefined;
   AddAddress: undefined;
+  Notifications: undefined;
 };
 
 export type ProfileStackParamList = {
