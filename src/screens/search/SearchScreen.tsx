@@ -34,7 +34,7 @@ export const SearchScreen: React.FC = () => {
     enabled: !!firstRestaurant,
   });
 
-  const allProducts: Product[] = menu?.categories.flatMap((c) => c.products ?? []) ?? [];
+  const allProducts: Product[] = menu?.categories?.flatMap((c) => c.products ?? []) ?? [];
 
   const results = query.length >= 2
     ? allProducts.filter((p) =>
@@ -80,7 +80,7 @@ export const SearchScreen: React.FC = () => {
 
           {/* Categories */}
           <Text variant="h4" style={{ marginTop: spacing.xl, marginBottom: spacing.md }}>Browse by category</Text>
-          {menu?.categories.map((cat) => (
+          {menu?.categories?.map((cat) => (
             <TouchableOpacity key={cat.id} style={styles.catRow} activeOpacity={0.8}>
               <View style={styles.catIcon}><Text style={{ fontSize: 24 }}>🍽️</Text></View>
               <View style={{ flex: 1 }}>

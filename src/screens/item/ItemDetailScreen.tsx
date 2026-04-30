@@ -29,7 +29,7 @@ export const ItemDetailScreen: React.FC = () => {
   });
 
   const product = menu?.categories
-    .flatMap((c) => c.products ?? [])
+    ?.flatMap((c) => c.products ?? [])
     .find((p) => p.id === productId);
 
   const addItem = useCartStore((s) => s.addItem);
