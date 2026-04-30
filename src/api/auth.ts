@@ -1,4 +1,5 @@
-import api from './client';
+import axios from 'axios';
+import api, { BASE_URL } from './client';
 import { storage } from '../utils/storage';
 
 export type RegistrationSource = 'MOBILE_APP' | 'WEB' | 'SELF_SERVICE' | 'POS';
@@ -79,15 +80,30 @@ export const verifyOtp = async (payload: OtpVerifyPayload): Promise<VerifyResult
   };
 };
 
-// Best-effort: tell the server to invalidate the session. We don't care if it
-// fails (network error, server already cleared it, etc.) — local state gets
-// cleared either way by the auth store.
-export const logoutRemote = async (): Promise<void> => {
-  try {
-    await api.post('/consumer/auth/logout');
-  } catch {
-    // ignore
-  }
+// Best-effort: tell the server to invalidate the session. Pass the token
+// explicitly because by the time this is dispatched the local storage may
+// already be cleared (we want the UI to respond instantly, then notify the
+// server in the background). Fire-and-forget — failures are ignored.
+export const logoutRemote = (accessToken: string): void => {
+  if (!accessToken) return;
+  // Use a bare axios so we don't go through the request interceptor (which
+  // would try to read from now-empty storage) or the response interceptor
+  // (we don't care about retry/refresh on logout).
+  void axios
+    .post(
+      `${BASE_URL}/consumer/auth/logout`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 5000,
+      },
+    )
+    .catch(() => {
+      // ignore — local state is already cleared
+    });
 };
 
 export const saveTokens = async (tokens: AuthTokens) => {

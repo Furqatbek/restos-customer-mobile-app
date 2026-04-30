@@ -41,10 +41,16 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: async () => {
-    await logoutRemote();      // best-effort server-side invalidation
+    // Capture the token BEFORE clearing local state so we can still tell
+    // the server to invalidate the session.
+    const token = await getAccessToken();
+    // Clear local state immediately — UI responds instantly, the root
+    // navigator subscribes to isAuthenticated and swaps to the auth stack.
     await clearTokens();
-    // Keep hasOnboarded so we land on Login (not Splash) next time.
     set({ customer: null, isAuthenticated: false });
+    // Fire-and-forget server invalidation. Keep hasOnboarded so we land
+    // on Login (not Splash) next time.
+    if (token) logoutRemote(token);
   },
 
   setCustomer: (customer) => set({ customer }),
