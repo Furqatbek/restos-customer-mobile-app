@@ -8,7 +8,7 @@ import { RouteProp } from '@react-navigation/native';
 import { AuthStackParamList } from '../../navigation/types';
 import { Text } from '../../components/common/Text';
 import { Button } from '../../components/common/Button';
-import { verifyOtp, saveTokens, requestOtp } from '../../api/auth';
+import { verifyOtp, requestOtp } from '../../api/auth';
 import { useAuthStore } from '../../store/authStore';
 import { colors, spacing, radius, typography } from '../../theme';
 
@@ -26,7 +26,7 @@ export const OtpVerifyScreen: React.FC<Props> = ({ navigation, route }) => {
   const [error, setError] = useState('');
   const [countdown, setCountdown] = useState(60);
   const inputRef = useRef<TextInput>(null);
-  const setCustomer = useAuthStore((s) => s.setCustomer);
+  const loginSuccess = useAuthStore((s) => s.loginSuccess);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -49,14 +49,17 @@ export const OtpVerifyScreen: React.FC<Props> = ({ navigation, route }) => {
     setError('');
     try {
       const result = await verifyOtp({ phoneNumber, otpCode: code });
-      await saveTokens({ accessToken: result.accessToken, refreshToken: result.refreshToken });
-      setCustomer({
-        id: result.customerId,
-        firstName,
-        lastName,
-        phoneNumber: result.phoneNumber,
+      // loginSuccess persists tokens + sets isAuthenticated → root navigator
+      // automatically swaps to MainNavigator. No manual navigate needed.
+      await loginSuccess({
+        customer: {
+          id: result.customerId,
+          firstName,
+          lastName,
+          phoneNumber: result.phoneNumber,
+        },
+        tokens: { accessToken: result.accessToken, refreshToken: result.refreshToken },
       });
-      navigation.getParent()?.reset({ index: 0, routes: [{ name: 'Main' }] });
     } catch (e: any) {
       setError(e?.response?.data?.message ?? 'Invalid code. Please try again.');
       setDigits(Array(OTP_LENGTH).fill(''));

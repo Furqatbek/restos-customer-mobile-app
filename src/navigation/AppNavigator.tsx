@@ -1,22 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { getAccessToken } from '../api/auth';
 import { RootStackParamList } from './types';
 import { AuthNavigator } from './AuthNavigator';
 import { MainNavigator } from './MainNavigator';
+import { useAuthStore } from '../store/authStore';
 import { colors } from '../theme';
 
 const Root = createStackNavigator<RootStackParamList>();
 
 export const AppNavigator: React.FC = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const isReady = useAuthStore((s) => s.isReady);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const hydrate = useAuthStore((s) => s.hydrate);
 
   useEffect(() => {
-    getAccessToken().then((token) => setIsLoggedIn(!!token));
-  }, []);
+    hydrate();
+  }, [hydrate]);
 
-  if (isLoggedIn === null) return null; // splash handled in auth stack
+  if (!isReady) return null;
 
   return (
     <NavigationContainer
@@ -39,7 +41,7 @@ export const AppNavigator: React.FC = () => {
       }}
     >
       <Root.Navigator screenOptions={{ headerShown: false }}>
-        {!isLoggedIn ? (
+        {!isAuthenticated ? (
           <Root.Screen name="Auth" component={AuthNavigator} />
         ) : (
           <Root.Screen name="Main" component={MainNavigator} />

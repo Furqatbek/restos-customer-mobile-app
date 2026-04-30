@@ -1,16 +1,50 @@
 import { create } from 'zustand';
-import { CustomerInfo } from '../api/auth';
+import { CustomerInfo, AuthTokens, saveTokens, clearTokens, getAccessToken } from '../api/auth';
+import { storage } from '../utils/storage';
+
+const HAS_ONBOARDED_KEY = 'has_onboarded';
 
 interface AuthState {
-  customer: CustomerInfo | null;
+  isReady: boolean;          // hydrate() finished
   isAuthenticated: boolean;
+  hasOnboarded: boolean;     // ever completed login → skip Splash/Onboarding
+  customer: CustomerInfo | null;
+
+  hydrate: () => Promise<void>;
+  loginSuccess: (params: { customer: CustomerInfo; tokens: AuthTokens }) => Promise<void>;
+  logout: () => Promise<void>;
   setCustomer: (customer: CustomerInfo) => void;
-  clearAuth: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  customer: null,
+  isReady: false,
   isAuthenticated: false,
-  setCustomer: (customer) => set({ customer, isAuthenticated: true }),
-  clearAuth: () => set({ customer: null, isAuthenticated: false }),
+  hasOnboarded: false,
+  customer: null,
+
+  hydrate: async () => {
+    const [token, hasOnboarded] = await Promise.all([
+      getAccessToken(),
+      storage.getItem(HAS_ONBOARDED_KEY),
+    ]);
+    set({
+      isReady: true,
+      isAuthenticated: !!token,
+      hasOnboarded: !!hasOnboarded,
+    });
+  },
+
+  loginSuccess: async ({ customer, tokens }) => {
+    await saveTokens(tokens);
+    await storage.setItem(HAS_ONBOARDED_KEY, '1');
+    set({ customer, isAuthenticated: true, hasOnboarded: true });
+  },
+
+  logout: async () => {
+    await clearTokens();
+    // Keep hasOnboarded so we land on Login (not Splash) next time.
+    set({ customer: null, isAuthenticated: false });
+  },
+
+  setCustomer: (customer) => set({ customer }),
 }));
