@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  View, StyleSheet, TouchableOpacity, ScrollView,
+  View, StyleSheet, TouchableOpacity, ScrollView, Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,6 +9,8 @@ import { AuthStackParamList } from '../../navigation/types';
 import { Text } from '../../components/common/Text';
 import { Button } from '../../components/common/Button';
 import { colors, spacing, radius } from '../../theme';
+
+const WINDOW_HEIGHT = Dimensions.get('window').height;
 
 type Props = { navigation: StackNavigationProp<AuthStackParamList, 'Onboarding'> };
 
@@ -72,7 +74,7 @@ export const OnboardingScreen: React.FC<Props> = ({ navigation }) => {
   const featureSlide = isLanguageStep ? null : FEATURE_SLIDES[step - 1];
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { minHeight: WINDOW_HEIGHT, height: WINDOW_HEIGHT }]}>
       {/* Slide content area — leaves room for the footer */}
       <View style={[styles.slideArea, { paddingBottom: FOOTER_HEIGHT + insets.bottom }]}>
         {isLanguageStep ? (
