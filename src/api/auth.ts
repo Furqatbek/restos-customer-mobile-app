@@ -17,8 +17,12 @@ export interface OtpVerifyPayload {
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
-  tokenType: string;
-  expiresIn: number;
+}
+
+export interface VerifyResult extends AuthTokens {
+  customerId: number;
+  phoneNumber: string;
+  isNewUser: boolean;
 }
 
 export interface CustomerInfo {
@@ -29,14 +33,51 @@ export interface CustomerInfo {
   email?: string;
 }
 
-export const requestOtp = (payload: OtpRequestPayload) =>
-  api.post<{ sessionId: string; expiresAt: string }>('/consumer/auth/login', {
-    ...payload,
-    registrationSource: 'MOBILE_APP' as RegistrationSource,
-  });
+// Backend envelope: { success, message, data, timestamp }
+interface ApiEnvelope<T> {
+  success: boolean;
+  message?: string;
+  data: T;
+  timestamp?: string;
+}
 
-export const verifyOtp = (payload: OtpVerifyPayload) =>
-  api.post<AuthTokens & { customer: CustomerInfo }>('/consumer/auth/verify', payload);
+interface OtpRequestResponseData {
+  session_id?: string;
+  expires_at?: string;
+}
+
+interface OtpVerifyResponseData {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+  expires_in_seconds: number;
+  phone_number: string;
+  customer_id: number;
+  is_new_user: boolean;
+}
+
+export const requestOtp = async (payload: OtpRequestPayload) => {
+  const { data } = await api.post<ApiEnvelope<OtpRequestResponseData>>(
+    '/consumer/auth/login',
+    { ...payload, registrationSource: 'MOBILE_APP' as RegistrationSource },
+  );
+  return data.data;
+};
+
+export const verifyOtp = async (payload: OtpVerifyPayload): Promise<VerifyResult> => {
+  const { data } = await api.post<ApiEnvelope<OtpVerifyResponseData>>(
+    '/consumer/auth/verify',
+    payload,
+  );
+  const d = data.data;
+  return {
+    accessToken: d.access_token,
+    refreshToken: d.refresh_token,
+    customerId: d.customer_id,
+    phoneNumber: d.phone_number,
+    isNewUser: d.is_new_user,
+  };
+};
 
 export const saveTokens = async (tokens: AuthTokens) => {
   await storage.setItem('access_token', tokens.accessToken);
