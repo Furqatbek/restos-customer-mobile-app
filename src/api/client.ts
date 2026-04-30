@@ -25,10 +25,13 @@ const performRefresh = async (): Promise<string | null> => {
   try {
     // Use a bare axios instance — bypasses our interceptors so we don't
     // recurse and don't attach the (likely-expired) access token.
-    const { data } = await axios.post(`${BASE_URL}/auth/refresh`, { refreshToken });
-    const inner = data?.data ?? data; // unwrap envelope if present
-    const accessToken: string | undefined = inner?.access_token ?? inner?.accessToken;
-    const newRefresh: string | undefined = inner?.refresh_token ?? inner?.refreshToken;
+    const { data } = await axios.post(
+      `${BASE_URL}/consumer/auth/refresh`,
+      { refreshToken },
+    );
+    const inner = data?.data ?? data; // unwrap envelope
+    const accessToken: string | undefined = inner?.accessToken ?? inner?.access_token;
+    const newRefresh: string | undefined = inner?.refreshToken ?? inner?.refresh_token;
     if (!accessToken || !newRefresh) return null;
     await storage.setItem('access_token', accessToken);
     await storage.setItem('refresh_token', newRefresh);
