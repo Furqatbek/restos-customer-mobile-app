@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { CustomerInfo, AuthTokens, saveTokens, clearTokens, getAccessToken } from '../api/auth';
+import { CustomerInfo, AuthTokens, saveTokens, clearTokens, getAccessToken, logoutRemote } from '../api/auth';
 import { storage } from '../utils/storage';
 
 const HAS_ONBOARDED_KEY = 'has_onboarded';
@@ -41,6 +41,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: async () => {
+    await logoutRemote();      // best-effort server-side invalidation
     await clearTokens();
     // Keep hasOnboarded so we land on Login (not Splash) next time.
     set({ customer: null, isAuthenticated: false });

@@ -79,6 +79,17 @@ export const verifyOtp = async (payload: OtpVerifyPayload): Promise<VerifyResult
   };
 };
 
+// Best-effort: tell the server to invalidate the session. We don't care if it
+// fails (network error, server already cleared it, etc.) — local state gets
+// cleared either way by the auth store.
+export const logoutRemote = async (): Promise<void> => {
+  try {
+    await api.post('/consumer/auth/logout');
+  } catch {
+    // ignore
+  }
+};
+
 export const saveTokens = async (tokens: AuthTokens) => {
   await storage.setItem('access_token', tokens.accessToken);
   await storage.setItem('refresh_token', tokens.refreshToken);

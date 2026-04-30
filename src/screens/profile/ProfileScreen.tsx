@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
@@ -8,7 +8,6 @@ import { Text } from '../../components/common/Text';
 import { Divider } from '../../components/common/Divider';
 import { Badge } from '../../components/common/Badge';
 import { useAuthStore } from '../../store/authStore';
-import { clearTokens } from '../../api/auth';
 import { getLoyaltyInfo } from '../../api/customer';
 import { colors, spacing, radius, shadow } from '../../theme';
 
@@ -43,7 +42,8 @@ const menuStyles = StyleSheet.create({
 
 export const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<any>();
-  const { customer, clearAuth } = useAuthStore();
+  const customer = useAuthStore((s) => s.customer);
+  const logout = useAuthStore((s) => s.logout);
 
   const { data: loyalty } = useQuery({
     queryKey: ['loyalty', customer?.id],
@@ -52,17 +52,19 @@ export const ProfileScreen: React.FC = () => {
   });
 
   const handleSignOut = () => {
+    // Alert.alert button handlers don't fire on react-native-web; fall back
+    // to window.confirm there. After logout(), the root navigator subscribes
+    // to isAuthenticated and swaps to the auth stack automatically.
+    if (Platform.OS === 'web') {
+      // eslint-disable-next-line no-alert
+      if (typeof window !== 'undefined' && window.confirm('Are you sure you want to sign out?')) {
+        logout();
+      }
+      return;
+    }
     Alert.alert('Sign out', 'Are you sure you want to sign out?', [
       { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign out',
-        style: 'destructive',
-        onPress: async () => {
-          await clearTokens();
-          clearAuth();
-          navigation.reset({ index: 0, routes: [{ name: 'Auth' }] });
-        },
-      },
+      { text: 'Sign out', style: 'destructive', onPress: () => { logout(); } },
     ]);
   };
 
