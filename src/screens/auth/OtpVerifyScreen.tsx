@@ -20,7 +20,7 @@ type Props = {
 const OTP_LENGTH = 6;
 
 export const OtpVerifyScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { phone, firstName, lastName } = route.params;
+  const { phoneNumber, firstName, lastName } = route.params;
   const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -48,7 +48,7 @@ export const OtpVerifyScreen: React.FC<Props> = ({ navigation, route }) => {
     setLoading(true);
     setError('');
     try {
-      const { data } = await verifyOtp({ phone, otp: code });
+      const { data } = await verifyOtp({ phoneNumber, otp: code });
       await saveTokens(data);
       setCustomer(data.customer);
       navigation.getParent()?.reset({ index: 0, routes: [{ name: 'Main' }] });
@@ -63,7 +63,7 @@ export const OtpVerifyScreen: React.FC<Props> = ({ navigation, route }) => {
   const handleResend = async () => {
     if (countdown > 0) return;
     try {
-      await requestOtp({ phone, firstName, lastName });
+      await requestOtp({ phoneNumber, firstName, lastName });
       setCountdown(60);
       setError('');
     } catch {}
@@ -82,7 +82,7 @@ export const OtpVerifyScreen: React.FC<Props> = ({ navigation, route }) => {
             <Text variant="h2">Check your phone</Text>
             <Text variant="body" color={colors.inkSub} style={{ marginTop: 8 }}>
               We sent a 6-digit code to{'\n'}
-              <Text variant="bodyMed" color={colors.ink}>{phone}</Text>
+              <Text variant="bodyMed" color={colors.ink}>{phoneNumber}</Text>
             </Text>
           </View>
 

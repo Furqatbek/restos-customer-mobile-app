@@ -61,7 +61,7 @@ export const CheckoutScreen: React.FC = () => {
         customerInfo: {
           firstName: customer.firstName,
           lastName: customer.lastName,
-          phone: customer.phone,
+          phone: customer.phoneNumber,
         },
         items: cart.items.map((item: CartItem) => ({
           productId: item.product.id,

@@ -1,14 +1,16 @@
 import api from './client';
 import { storage } from '../utils/storage';
 
+export type RegistrationSource = 'MOBILE_APP' | 'WEB' | 'SELF_SERVICE' | 'POS';
+
 export interface OtpRequestPayload {
-  phone: string;
+  phoneNumber: string;
   firstName: string;
   lastName: string;
 }
 
 export interface OtpVerifyPayload {
-  phone: string;
+  phoneNumber: string;
   otp: string;
 }
 
@@ -23,12 +25,15 @@ export interface CustomerInfo {
   id: number;
   firstName: string;
   lastName: string;
-  phone: string;
+  phoneNumber: string;
   email?: string;
 }
 
 export const requestOtp = (payload: OtpRequestPayload) =>
-  api.post<{ sessionId: string; expiresAt: string }>('/consumer/auth/login', payload);
+  api.post<{ sessionId: string; expiresAt: string }>('/consumer/auth/login', {
+    ...payload,
+    registrationSource: 'MOBILE_APP' as RegistrationSource,
+  });
 
 export const verifyOtp = (payload: OtpVerifyPayload) =>
   api.post<AuthTokens & { customer: CustomerInfo }>('/consumer/auth/verify', payload);

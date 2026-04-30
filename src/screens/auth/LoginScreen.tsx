@@ -28,8 +28,8 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     setError('');
     setLoading(true);
     try {
-      await requestOtp({ phone, firstName, lastName });
-      navigation.navigate('OtpVerify', { phone, firstName, lastName });
+      await requestOtp({ phoneNumber: phone, firstName, lastName });
+      navigation.navigate('OtpVerify', { phoneNumber: phone, firstName, lastName });
     } catch (e: any) {
       setError(e?.response?.data?.message ?? 'Failed to send code. Try again.');
     } finally {

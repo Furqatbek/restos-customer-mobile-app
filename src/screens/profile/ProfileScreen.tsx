@@ -81,7 +81,7 @@ export const ProfileScreen: React.FC = () => {
           <Text variant="h2" color={colors.white}>
             {customer?.firstName} {customer?.lastName}
           </Text>
-          <Text variant="body" color="rgba(255,255,255,0.7)">{customer?.phone}</Text>
+          <Text variant="body" color="rgba(255,255,255,0.7)">{customer?.phoneNumber}</Text>
 
           {loyalty && (
             <View style={[styles.tierBadge, { backgroundColor: tierColor }]}>

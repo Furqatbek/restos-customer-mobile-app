@@ -4,7 +4,7 @@ export type AuthStackParamList = {
   Splash: undefined;
   Onboarding: undefined;
   Login: undefined;
-  OtpVerify: { phone: string; firstName: string; lastName: string };
+  OtpVerify: { phoneNumber: string; firstName: string; lastName: string };
 };
 
 export type MainTabParamList = {
