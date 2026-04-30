@@ -1,9 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
-  View, StyleSheet, TouchableOpacity, Animated,
+  View, StyleSheet, TouchableOpacity, ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/types';
 import { Text } from '../../components/common/Text';
@@ -43,22 +43,15 @@ const FEATURE_SLIDES = [
   },
 ];
 
-const TOTAL_STEPS = 1 + FEATURE_SLIDES.length; // language + 3 features
+const TOTAL_STEPS = 1 + FEATURE_SLIDES.length;
+const FOOTER_HEIGHT = 180;
 
 export const OnboardingScreen: React.FC<Props> = ({ navigation }) => {
   const [step, setStep] = useState(0);
   const [selectedLang, setSelectedLang] = useState('uz-latn');
-  const opacity = useRef(new Animated.Value(1)).current;
-  const isFirst = useRef(true);
+  const insets = useSafeAreaInsets();
 
   const selectedLanguage = LANGUAGES.find((l) => l.id === selectedLang)!;
-
-  // Fade in whenever step changes (skip the very first mount)
-  useEffect(() => {
-    if (isFirst.current) { isFirst.current = false; return; }
-    opacity.setValue(0);
-    Animated.timing(opacity, { toValue: 1, duration: 250, useNativeDriver: true }).start();
-  }, [step]);
 
   const goNext = () => {
     if (step >= TOTAL_STEPS - 1) {
@@ -79,10 +72,14 @@ export const OnboardingScreen: React.FC<Props> = ({ navigation }) => {
   const featureSlide = isLanguageStep ? null : FEATURE_SLIDES[step - 1];
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <Animated.View style={[styles.slideContainer, { opacity }]}>
+    <View style={styles.root}>
+      {/* Slide content area — leaves room for the footer */}
+      <View style={[styles.slideArea, { paddingBottom: FOOTER_HEIGHT + insets.bottom }]}>
         {isLanguageStep ? (
-          <View style={styles.langSlide}>
+          <ScrollView
+            style={styles.flex}
+            contentContainerStyle={[styles.langScroll, { paddingTop: insets.top + spacing.xl }]}
+          >
             <View style={styles.langHeader}>
               <Text variant="h2" align="center">Tilni tanlang</Text>
               <Text variant="bodySm" color={colors.inkSub} align="center" style={{ marginTop: 4 }}>
@@ -113,10 +110,10 @@ export const OnboardingScreen: React.FC<Props> = ({ navigation }) => {
                 );
               })}
             </View>
-          </View>
+          </ScrollView>
         ) : (
           <LinearGradient colors={featureSlide!.gradient} style={styles.featureSlide}>
-            <View style={styles.featureContent}>
+            <View style={[styles.featureContent, { paddingTop: insets.top + spacing.xxxl }]}>
               <Text style={styles.featureEmoji}>{featureSlide!.emoji}</Text>
               <Text variant="h1" color={colors.white} align="center" style={{ marginTop: 24 }}>
                 {featureSlide!.title}
@@ -127,10 +124,10 @@ export const OnboardingScreen: React.FC<Props> = ({ navigation }) => {
             </View>
           </LinearGradient>
         )}
-      </Animated.View>
+      </View>
 
-      {/* Footer: always visible */}
-      <View style={styles.footer}>
+      {/* Footer absolutely pinned to bottom — always visible */}
+      <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.lg }]}>
         <View style={styles.dots}>
           {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
             <View key={i} style={[styles.dot, i === step && styles.dotActive]} />
@@ -143,20 +140,20 @@ export const OnboardingScreen: React.FC<Props> = ({ navigation }) => {
           </TouchableOpacity>
         )}
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.canvas },
+  root: { flex: 1, backgroundColor: colors.canvas },
+  flex: { flex: 1 },
+  slideArea: { flex: 1 },
 
-  slideContainer: { flex: 1 },
-
-  // Language slide
-  langSlide: { flex: 1, backgroundColor: colors.canvas },
+  langScroll: {
+    paddingBottom: spacing.lg,
+  },
   langHeader: {
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xxl,
     paddingBottom: spacing.lg,
     gap: 4,
   },
@@ -196,17 +193,18 @@ const styles = StyleSheet.create({
   radioSelected: { borderColor: colors.primary },
   radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary },
 
-  // Feature slides
   featureSlide: { flex: 1 },
   featureContent: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xxxl },
   featureEmoji: { fontSize: 80 },
 
-  // Footer
   footer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: colors.canvas,
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.lg,
-    paddingBottom: spacing.xxl,
     gap: spacing.md,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.border,
