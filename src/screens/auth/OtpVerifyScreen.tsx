@@ -48,7 +48,7 @@ export const OtpVerifyScreen: React.FC<Props> = ({ navigation, route }) => {
     setLoading(true);
     setError('');
     try {
-      const { data } = await verifyOtp({ phoneNumber, otp: code });
+      const { data } = await verifyOtp({ phoneNumber, otpCode: code });
       await saveTokens(data);
       setCustomer(data.customer);
       navigation.getParent()?.reset({ index: 0, routes: [{ name: 'Main' }] });

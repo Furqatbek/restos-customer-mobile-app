@@ -11,7 +11,7 @@ export interface OtpRequestPayload {
 
 export interface OtpVerifyPayload {
   phoneNumber: string;
-  otp: string;
+  otpCode: string;
 }
 
 export interface AuthTokens {
