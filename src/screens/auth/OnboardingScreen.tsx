@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  View, StyleSheet, TouchableOpacity, ScrollView, Dimensions,
+  View, StyleSheet, TouchableOpacity, ScrollView, useWindowDimensions, Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,8 +9,6 @@ import { AuthStackParamList } from '../../navigation/types';
 import { Text } from '../../components/common/Text';
 import { Button } from '../../components/common/Button';
 import { colors, spacing, radius } from '../../theme';
-
-const WINDOW_HEIGHT = Dimensions.get('window').height;
 
 type Props = { navigation: StackNavigationProp<AuthStackParamList, 'Onboarding'> };
 
@@ -52,6 +50,12 @@ export const OnboardingScreen: React.FC<Props> = ({ navigation }) => {
   const [step, setStep] = useState(0);
   const [selectedLang, setSelectedLang] = useState('uz-latn');
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  // On web, force the screen to fill the viewport — flex:1 on a navigator
+  // screen doesn't work without an explicit pixel height.
+  const rootSizing = Platform.OS === 'web'
+    ? { height: windowHeight || 800 }
+    : null;
 
   const selectedLanguage = LANGUAGES.find((l) => l.id === selectedLang)!;
 
@@ -74,7 +78,7 @@ export const OnboardingScreen: React.FC<Props> = ({ navigation }) => {
   const featureSlide = isLanguageStep ? null : FEATURE_SLIDES[step - 1];
 
   return (
-    <View style={[styles.root, { minHeight: WINDOW_HEIGHT, height: WINDOW_HEIGHT }]}>
+    <View style={[styles.root, rootSizing]}>
       {/* Slide content area — leaves room for the footer */}
       <View style={[styles.slideArea, { paddingBottom: FOOTER_HEIGHT + insets.bottom }]}>
         {isLanguageStep ? (
