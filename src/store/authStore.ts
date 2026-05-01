@@ -4,6 +4,7 @@ import { storage } from '../utils/storage';
 import { registerPushNotifications, unregisterPushNotifications } from '../utils/push';
 
 const HAS_ONBOARDED_KEY = 'has_onboarded';
+const CUSTOMER_KEY = 'customer';
 
 interface AuthState {
   isReady: boolean;          // hydrate() finished
@@ -14,8 +15,17 @@ interface AuthState {
   hydrate: () => Promise<void>;
   loginSuccess: (params: { customer: CustomerInfo; tokens: AuthTokens }) => Promise<void>;
   logout: () => Promise<void>;
-  setCustomer: (customer: CustomerInfo) => void;
+  setCustomer: (customer: CustomerInfo) => Promise<void>;
 }
+
+const safeParseCustomer = (raw: string | null): CustomerInfo | null => {
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as CustomerInfo;
+  } catch {
+    return null;
+  }
+};
 
 export const useAuthStore = create<AuthState>((set) => ({
   isReady: false,
@@ -24,20 +34,23 @@ export const useAuthStore = create<AuthState>((set) => ({
   customer: null,
 
   hydrate: async () => {
-    const [token, hasOnboarded] = await Promise.all([
+    const [token, hasOnboarded, customerRaw] = await Promise.all([
       getAccessToken(),
       storage.getItem(HAS_ONBOARDED_KEY),
+      storage.getItem(CUSTOMER_KEY),
     ]);
     set({
       isReady: true,
       isAuthenticated: !!token,
       hasOnboarded: !!hasOnboarded,
+      customer: safeParseCustomer(customerRaw),
     });
   },
 
   loginSuccess: async ({ customer, tokens }) => {
     await saveTokens(tokens);
     await storage.setItem(HAS_ONBOARDED_KEY, '1');
+    await storage.setItem(CUSTOMER_KEY, JSON.stringify(customer));
     set({ customer, isAuthenticated: true, hasOnboarded: true });
     // Best-effort push registration. Never blocks login completion.
     void registerPushNotifications();
@@ -52,11 +65,15 @@ export const useAuthStore = create<AuthState>((set) => ({
     // Clear local state immediately — UI responds instantly, the root
     // navigator subscribes to isAuthenticated and swaps to the auth stack.
     await clearTokens();
+    await storage.deleteItem(CUSTOMER_KEY);
     set({ customer: null, isAuthenticated: false });
     // Fire-and-forget server invalidation. Keep hasOnboarded so we land
     // on Login (not Splash) next time.
     if (token) logoutRemote(token);
   },
 
-  setCustomer: (customer) => set({ customer }),
+  setCustomer: async (customer) => {
+    await storage.setItem(CUSTOMER_KEY, JSON.stringify(customer));
+    set({ customer });
+  },
 }));
