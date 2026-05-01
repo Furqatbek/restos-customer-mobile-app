@@ -1,6 +1,11 @@
 import api from './client';
 
+// ─── Types ────────────────────────────────────────────────────────────────
+
+export type NotificationRole = 'CUSTOMER' | 'ADMIN' | 'WAITER' | 'COURIER';
+
 export type NotificationType =
+  | 'ORDER_STATUS'
   | 'ORDER_CONFIRMED'
   | 'ORDER_PREPARING'
   | 'ORDER_READY'
@@ -9,38 +14,71 @@ export type NotificationType =
   | 'ORDER_CANCELLED'
   | 'PROMOTION'
   | 'SYSTEM'
-  | string; // tolerate unknown server values
+  | string;
 
 export interface Notification {
   id: number;
-  type: NotificationType;
   title: string;
-  body?: string;
-  message?: string;
-  data?: Record<string, unknown>;
+  message: string;
+  userRole: NotificationRole;
+  userId?: number;
   orderId?: number;
-  isRead: boolean;
-  read?: boolean; // accept both shapes
+  type: NotificationType;
+  read: boolean;
   createdAt: string;
 }
 
-export interface UnreadCount {
-  count: number;
+// Spring Boot Page<T> shape
+export interface Page<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  // also: number, size, first, last, etc. — ignore unless needed
 }
+
+export interface ListParams {
+  role?: NotificationRole;
+  userId?: number;
+  page?: number;
+  size?: number;
+}
+
+const buildListQuery = (p: ListParams = {}): string => {
+  const params = new URLSearchParams();
+  params.set('role', p.role ?? 'CUSTOMER');
+  if (p.userId !== undefined) params.set('userId', String(p.userId));
+  if (p.page !== undefined) params.set('page', String(p.page));
+  if (p.size !== undefined) params.set('size', String(p.size));
+  return params.toString();
+};
 
 // ─── Inbox ────────────────────────────────────────────────────────────────
 
-export const listNotifications = () =>
-  api.get<Notification[]>('/notifications');
+export const listNotifications = (params: ListParams = {}) =>
+  api.get<Page<Notification>>(`/notifications?${buildListQuery(params)}`);
 
-export const listUnreadNotifications = () =>
-  api.get<Notification[]>('/notifications/unread');
+export const listUnreadNotifications = (params: ListParams = {}) =>
+  api.get<Notification[]>(`/notifications/unread?${buildListQuery(params)}`);
 
-export const getUnreadCount = () =>
-  api.get<UnreadCount | number>('/notifications/unread/count');
+export const getUnreadCount = (params: ListParams = {}) =>
+  api.get<{ count: number } | number>(`/notifications/unread/count?${buildListQuery(params)}`);
 
 export const listOrderNotifications = (orderId: number | string) =>
   api.get<Notification[]>(`/notifications/order/${orderId}`);
+
+// ─── Mutations ────────────────────────────────────────────────────────────
+
+export const markNotificationRead = (id: number) =>
+  api.patch<{ success: boolean }>(`/notifications/${id}/read`);
+
+export const markAllNotificationsRead = (params: ListParams = {}) =>
+  api.patch<{ success: boolean }>(`/notifications/mark-all-read?${buildListQuery(params)}`);
+
+export const archiveNotification = (id: number) =>
+  api.patch<{ success: boolean }>(`/notifications/${id}/archive`);
+
+export const deleteNotification = (id: number) =>
+  api.delete<{ success: boolean }>(`/notifications/${id}`);
 
 // ─── Push subscription ────────────────────────────────────────────────────
 
@@ -52,7 +90,6 @@ export interface VapidKeyResponse {
 
 export const getVapidKey = () => api.get<VapidKeyResponse | string>('/push/vapid-key');
 
-// Web push subscription payload (PushSubscription.toJSON())
 export interface WebPushSubscription {
   endpoint: string;
   expirationTime?: number | null;
@@ -61,10 +98,8 @@ export interface WebPushSubscription {
 
 export interface SubscribePayload {
   platform: 'WEB' | 'IOS' | 'ANDROID';
-  // Web fields
   endpoint?: string;
   keys?: { p256dh: string; auth: string };
-  // Native fields
   deviceToken?: string;
 }
 

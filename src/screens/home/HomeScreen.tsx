@@ -55,11 +55,13 @@ export const HomeScreen: React.FC = () => {
 
   // Unread notifications badge — best-effort, no UI on failure.
   const { data: unread } = useQuery({
-    queryKey: ['notifications-unread-count'],
-    queryFn: () => getUnreadCount().then((r) => {
-      const v = r.data as { count?: number } | number;
-      return typeof v === 'number' ? v : (v?.count ?? 0);
-    }),
+    queryKey: ['notifications-unread-count', customer?.id],
+    queryFn: () =>
+      getUnreadCount({ role: 'CUSTOMER', userId: customer?.id }).then((r) => {
+        const v = r.data as { count?: number } | number;
+        return typeof v === 'number' ? v : (v?.count ?? 0);
+      }),
+    enabled: !!customer?.id,
     refetchInterval: 60_000,
     retry: false,
   });
